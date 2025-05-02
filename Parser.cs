@@ -11,12 +11,19 @@ namespace cobra.Classes
         {
             var lines = code.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
             var result = new List<ParsedLine>();
-            var controlFlowStack = new Stack<string>(); // To keep track of open blocks
+            var controlFlowStack = new Stack<string>();
 
             foreach (var rawLine in lines)
             {
                 var line = rawLine.Trim();
-                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
+                    continue;
+
+                int commentIndex = line.IndexOf("//");
+                if (commentIndex >= 0)
+                {
+                    line = line.Substring(0, commentIndex).Trim();
+                }
 
                 {
                     var match = LinePattern.Match(line);

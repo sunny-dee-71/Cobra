@@ -7,6 +7,7 @@ namespace cobra
     public class Evaluator
     {
         public static Dictionary<string, Co_Object> variables = new();
+        private static Dictionary<string, Function> userFunctions = new();
 
         public async Task Evaluate(List<ParsedLine> lines)
         {
@@ -22,11 +23,10 @@ namespace cobra
                 {
                     var resolvedArgs = ResolveArguments(args);
                     if (resolvedArgs.Count != 1 || resolvedArgs[0].Type != Co_Object.ObjectType.Boolean)
-                        throw new Exception($"[if] expects 1 boolean argument");
+                        throw new Exception("[if] expects 1 boolean argument");
 
                     bool condition = (bool)resolvedArgs[0].Value;
 
-                    // Get block of lines with greater indent
                     int blockStart = i + 1;
                     int blockEnd = blockStart;
                     while (blockEnd < lines.Count && lines[blockEnd].IndentLevel > indent)
@@ -35,16 +35,16 @@ namespace cobra
                     if (condition)
                     {
                         var block = lines.GetRange(blockStart, blockEnd - blockStart);
-                        await Evaluate(block); // Recursively evaluate the block
+                        await Evaluate(block);
                     }
 
-                    i = blockEnd; // Skip the block
+                    i = blockEnd;
                 }
                 else if (name == "repeat")
                 {
                     var resolvedArgs = ResolveArguments(args);
                     if (resolvedArgs.Count != 1 || resolvedArgs[0].Type != Co_Object.ObjectType.Int)
-                        throw new Exception($"[repeat] expects 1 integer argument");
+                        throw new Exception("[repeat] expects 1 integer argument");
 
                     int times = (int)resolvedArgs[0].Value;
 
@@ -56,7 +56,7 @@ namespace cobra
                     var block = lines.GetRange(blockStart, blockEnd - blockStart);
 
                     for (int r = 0; r < times; r++)
-                        await Evaluate(block); // Recursively evaluate the block
+                        await Evaluate(block);
 
                     i = blockEnd;
                 }
@@ -68,37 +68,43 @@ namespace cobra
             }
         }
 
-
-
-
         public async Task RunFunction(string functionName, List<Co_Object> args)
         {
-            var func = Objects.GetFunction(functionName);
-            if (func == null)
+            if (userFunctions.ContainsKey(functionName))
             {
-                Console.WriteLine($"Function '{functionName}' not found.");
-                return;
-            }
-
-            try
-            {
-                List<Co_Object> resolvedArgs;
-
-                if (functionName == "set" && args.Count >= 2)
-                {
-                    var resolvedSecond = ResolveArguments(new List<Co_Object> { args[1] });
-                    resolvedArgs = new List<Co_Object> { args[0], resolvedSecond[0] };
-                }
-                else
-                {
-                    resolvedArgs = ResolveArguments(args);
-                }
-
+                var func = userFunctions[functionName];
+                var resolvedArgs = ResolveArguments(args);
                 await func.Invoke(resolvedArgs);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"[ERROR] Error in function '{functionName}': {ex.Message}");
+                var func = Objects.GetFunction(functionName);
+                if (func == null)
+                {
+                    Console.WriteLine($"Function '{functionName}' not found.");
+                    return;
+                }
+
+                try
+                {
+                    List<Co_Object> resolvedArgs;
+
+                    if (functionName == "set" && args.Count >= 2)
+                    {
+                        var resolvedSecond = ResolveArguments(new List<Co_Object> { args[1] });
+                        resolvedArgs = new List<Co_Object> { args[0], resolvedSecond[0] };
+                    }
+                    else
+                    {
+                        resolvedArgs = ResolveArguments(args);
+                    }
+
+                    await func.Invoke(resolvedArgs);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ERROR] Error in function '{functionName}': {ex.Message}");
+                }
             }
         }
 

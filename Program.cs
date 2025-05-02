@@ -21,6 +21,8 @@ repeat(3)
 \2\repeat(3)
 \3\print(""thing"")
 
+//And that is it
+
 ";
 
         var parser = new Parser();
