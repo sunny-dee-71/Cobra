@@ -4,18 +4,30 @@ using cobra.Classes;
 class Program
 {
     [STAThread]
-    static void Main()
+    static async Task Main()
     {
         string code = @"
-print(""hello workld"")
-";
+print(""Welcome To Cobra"")
+set(""count"", 0)
+set(Hi, ""Hello"")
+print(Hi)
+set(shouldPrint, true)
 
+if(shouldPrint)
+\1\print(""This should print because the condition is true!"")
+
+repeat(3)
+\1\print(""Loop running"")
+\2\repeat(3)
+\3\print(""thing"")
+
+";
 
         var parser = new Parser();
         var parsedLines = parser.Parse(code);
 
         Evaluator evaluator = new Evaluator();
-        evaluator.Evaluate(parsedLines);
+        await evaluator.Evaluate(parsedLines);
 
         foreach (var line in parsedLines)
         {

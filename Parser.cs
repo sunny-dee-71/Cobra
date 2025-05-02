@@ -59,17 +59,25 @@ namespace cobra.Classes
                 {
                     args.Add(new Co_Object(intValue));
                 }
+                else if (float.TryParse(val, out float floatValue))
+                {
+                    args.Add(new Co_Object(floatValue));
+                }
                 else if (bool.TryParse(val, out bool boolValue))
                 {
                     args.Add(new Co_Object(boolValue));
                 }
                 else
                 {
-                    args.Add(new Co_Object(val));
+                    var obj = new Co_Object(val);
+                    obj.Type = Co_Object.ObjectType.Variable;
+                    args.Add(obj);
                 }
+
             }
 
             return args;
         }
+
     }
 }
