@@ -26,6 +26,9 @@ namespace cobra.Classes
                     line = line.Substring(0, commentIndex).Trim();
                 }
 
+                line = new string(line.Where(c => !char.IsWhiteSpace(c)).ToArray());
+
+
                 {
                     var match = LinePattern.Match(line);
                     if (!match.Success)
