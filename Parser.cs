@@ -55,52 +55,83 @@ namespace cobra.Classes
         public List<Co_Object> ParseArguments(string input)
         {
             var args = new List<Co_Object>();
+            var matches = Regex.Matches(input, "\".*?\"|[^,()]+|[(),]");
 
-            // Match quoted strings OR anything else split by commas
-            var matches = Regex.Matches(input, "\".*?\"|[^,]+");
+            var parenDepth = 0;
+            var currentArg = new StringBuilder();
 
             foreach (Match match in matches)
             {
-                string argText = match.Value.Trim();
+                string matchValue = match.Value.Trim();
 
-                // Check for nested function call like func(arg1, arg2)
-                if (argText.Contains("(") && argText.EndsWith(")"))
+                // Handle opening parentheses (start of function calls or nested expressions)
+                if (matchValue == "(")
                 {
-                    int parenIndex = argText.IndexOf('(');
-                    string funcName = argText.Substring(0, parenIndex).Trim();
-                    string argContents = argText.Substring(parenIndex + 1, argText.Length - parenIndex - 2).Trim();
-
-                    var innerArgs = ParseArguments(argContents);
-
-                    args.Add(new Co_Object(new FunctionCall
-                    {
-                        FunctionName = funcName,
-                        Arguments = innerArgs
-                    }));
-
-                    continue;
+                    parenDepth++;
+                    currentArg.Append(matchValue);
                 }
+                // Handle closing parentheses (end of function calls or nested expressions)
+                else if (matchValue == ")")
+                {
+                    parenDepth--;
+                    currentArg.Append(matchValue);
+                    if (parenDepth == 0) // End of a function call or nested expression
+                    {
+                        args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
+                        currentArg.Clear();
+                    }
+                }
+                // Handle commas outside function calls
+                else if (matchValue == ",")
+                {
+                    if (parenDepth == 0) // Split arguments at commas outside function calls
+                    {
+                        if (currentArg.Length > 0)
+                        {
+                            args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
+                            currentArg.Clear();
+                        }
+                    }
+                    else
+                    {
+                        currentArg.Append(matchValue);
+                    }
+                }
+                // Otherwise, just append the value (operator, string, etc.)
+                else
+                {
+                    currentArg.Append(matchValue);
+                }
+            }
 
-                // Check for binary operation (Cool + Cool, etc.)
-                var binMatch = Regex.Match(argText, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
+            // Add the last argument if any
+            if (currentArg.Length > 0)
+            {
+                // Check for binary operation and split the operator separately
+                var binMatch = Regex.Match(currentArg.ToString(), @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
+
                 if (binMatch.Success)
                 {
                     var left = ParseSingleArgument(binMatch.Groups[1].Value.Trim());
-                    var op = new Co_Object(binMatch.Groups[2].Value.Trim());
+                    var op = new Co_Object(binMatch.Groups[2].Value.Trim()); // Operator as its own argument
                     var right = ParseSingleArgument(binMatch.Groups[3].Value.Trim());
 
+                    // Add the parsed arguments and the operator as a separate item
                     args.Add(left);
                     args.Add(op);
                     args.Add(right);
                 }
                 else
                 {
-                    args.Add(ParseSingleArgument(argText));
+                    // If there is no binary operation, add it as a single argument
+                    args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
                 }
             }
 
             return args;
         }
+
+
 
 
 
