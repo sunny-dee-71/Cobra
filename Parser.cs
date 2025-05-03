@@ -118,50 +118,6 @@ namespace cobra.Classes
             }
         }
 
-        private List<string> Tokenize(string input)
-        {
-            var tokens = new List<string>();
-            var sb = new StringBuilder();
-            bool inQuotes = false;
-
-            for (int i = 0; i < input.Length; i++)
-            {
-                char c = input[i];
-
-                if (c == '"')
-                {
-                    sb.Append(c);
-                    inQuotes = !inQuotes;
-                }
-                else if (!inQuotes && (c == '+' || c == '-' || c == '*' || c == '/'))
-                {
-                    if (sb.Length > 0)
-                    {
-                        tokens.Add(sb.ToString().Trim());
-                        sb.Clear();
-                    }
-                    tokens.Add(c.ToString());
-                }
-                else if (!inQuotes && char.IsWhiteSpace(c))
-                {
-                    if (sb.Length > 0)
-                    {
-                        tokens.Add(sb.ToString().Trim());
-                        sb.Clear();
-                    }
-                }
-                else
-                {
-                    sb.Append(c);
-                }
-            }
-
-            if (sb.Length > 0)
-                tokens.Add(sb.ToString().Trim());
-
-            return tokens;
-        }
-
 
     }
 }
