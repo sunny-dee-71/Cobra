@@ -56,13 +56,32 @@ namespace cobra.Classes
         {
             var args = new List<Co_Object>();
 
-
+            // Match quoted strings OR anything else split by commas
             var matches = Regex.Matches(input, "\".*?\"|[^,]+");
 
             foreach (Match match in matches)
             {
                 string argText = match.Value.Trim();
 
+                // Check for nested function call like func(arg1, arg2)
+                if (argText.Contains("(") && argText.EndsWith(")"))
+                {
+                    int parenIndex = argText.IndexOf('(');
+                    string funcName = argText.Substring(0, parenIndex).Trim();
+                    string argContents = argText.Substring(parenIndex + 1, argText.Length - parenIndex - 2).Trim();
+
+                    var innerArgs = ParseArguments(argContents);
+
+                    args.Add(new Co_Object(new FunctionCall
+                    {
+                        FunctionName = funcName,
+                        Arguments = innerArgs
+                    }));
+
+                    continue;
+                }
+
+                // Check for binary operation (Cool + Cool, etc.)
                 var binMatch = Regex.Match(argText, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
                 if (binMatch.Success)
                 {
@@ -82,6 +101,7 @@ namespace cobra.Classes
 
             return args;
         }
+
 
 
 

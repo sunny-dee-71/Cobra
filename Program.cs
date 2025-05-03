@@ -28,9 +28,7 @@ repeat(Thing < 0)
 
 
 
-set(Cool, ""Hello"")
-repeat(true)
-\1\set(Cool, print(Cool + print(Cool)))
+print("" THing "" + print("" THing "" + print("" THing "" + print("" THing "" + "" Done ""))))
 
 
 //And that is it
