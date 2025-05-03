@@ -26,11 +26,11 @@ repeat(Thing < 0)
 \2\clear()
 \2\print(Thing)
 
-print(""h "" + ""i "" + "" there"")
 
 
 set(Cool, ""Hello"")
-print(Cool + print(Cool))
+repeat(true)
+\1\set(Cool, print(Cool + print(Cool)))
 
 
 //And that is it

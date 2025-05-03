@@ -49,7 +49,7 @@ namespace cobra.Classes
             return result;
         }
 
-        private List<Co_Object> ParseArguments(string input)
+        public List<Co_Object> ParseArguments(string input)
         {
             var args = new List<Co_Object>();
 

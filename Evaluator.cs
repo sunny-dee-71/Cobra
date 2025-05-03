@@ -54,7 +54,7 @@ namespace cobra
 
                     var block = lines.GetRange(blockStart, blockEnd - blockStart);
 
-                    double maxIterations = 99999999999999999999999d;
+                    double maxIterations = 100;
                     int iteration = 0;
 
                     var arg = resolvedArgs[0];
@@ -83,6 +83,12 @@ namespace cobra
                     else
                     {
                         throw new Exception("[repeat] argument must be either an integer or boolean");
+                    }
+
+                    if (iteration >= maxIterations)
+                    {
+                        Console.WriteLine("[WARNING] Maximum iterations reached in repeat loop.");
+                        i = blockEnd;
                     }
 
 
