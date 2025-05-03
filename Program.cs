@@ -21,11 +21,11 @@ if(shouldPrint)
 
 set(Thing, 0)
 \1\print(Thing)
-repeat(Thing < 100000)
+repeat(Thing < 100)
 \2\set(Thing, Thing + 1)
 \2\print(Thing)
 
-slowPrint(""This is a slow print!"", 0.1)
+
 
 //And that is it
 
@@ -35,6 +35,7 @@ slowPrint(""This is a slow print!"", 0.1)
         var parsedLines = parser.Parse(code);
 
         Evaluator evaluator = new Evaluator();
+        await Task.Delay(100);
         await evaluator.Evaluate(parsedLines);
 
         foreach (var line in parsedLines)

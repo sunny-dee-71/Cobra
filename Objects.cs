@@ -13,25 +13,20 @@ namespace cobra
             Functions.Add(new Function("print", new List<string> { "message" }, async args =>
             {
                 Console.WriteLine(args[0].Value);
+                return new Co_Object(args[0].Value.ToString());
             }));
 
-            Functions.Add(new Function("add", new List<string> { "a", "b" }, async args =>
-            {
-                if (args[0].Type == Co_Object.ObjectType.Int && args[1].Type == Co_Object.ObjectType.Int)
-                {
-                    int result = (int)args[0].Value + (int)args[1].Value;
-                    Console.WriteLine("Sum: " + result);
-                }
-            }));
 
             Functions.Add(new Function("clear", new List<string> { }, async args =>
             {
                 Console.Clear();
+                return new Co_Object(null);
             }));
 
             Functions.Add(new Function("exit", new List<string> { }, async args =>
             {
                 Environment.Exit(0);
+                return new Co_Object(null);
             }));
 
             Functions.Add(new Function("wait", new List<string> { "seconds" }, async args =>
@@ -40,11 +35,14 @@ namespace cobra
                 {
                     int seconds = (int)args[0].Value;
                     await Task.Delay(seconds * 1000);
+                    return new Co_Object(args[0].Value.ToString());
                 }
                 else
                 {
                     throw new Exception($"[wait] Expected an integer, got {args[0].Type}");
+                    return new Co_Object(null);
                 }
+
             }));
 
             Functions.Add(new Function("slowPrint", new List<string> { "message", "seconds" }, async args =>
@@ -68,32 +66,9 @@ namespace cobra
                 }
 
                 Console.WriteLine();
+                return new Co_Object(args[0].Value);
             }));
 
-            Functions.Add(new Function("Test", new List<string> { "Repeats" }, async args =>
-            {
-                int repeats = (int)args[0].Value;
-                int count = 0;
-                DateTime startTime = DateTime.Now;
-
-                for (int i = 0; i < repeats; i++)
-                {                    count++;
-                    Console.Write($"");
-
-                    if ((DateTime.Now - startTime).TotalSeconds >= 0.1)
-                    {
-                        Console.WriteLine($"{count} functions in the last 0.1 seconds.");
-
-
-                        startTime = DateTime.Now;
-
-                        count = 0;
-                    }
-
-                    
-                }
-                Console.WriteLine($"Total functions executed: {count}");
-            }));
 
             Functions.Add(new Function("set", new List<string> { "name", "value" }, async args =>
             {
@@ -113,6 +88,8 @@ namespace cobra
                 }
 
                 Evaluator.variables[varName] = value;
+
+                return new Co_Object(varName);
 
             }));
 

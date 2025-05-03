@@ -100,6 +100,15 @@ namespace cobra.Classes
             {
                 return new Co_Object(boolValue);
             }
+            else if (val.Contains("(") && val.Contains(")"))
+            {
+                var funcName = val.Substring(0, val.IndexOf("("));
+                var argsString = val.Substring(val.IndexOf("(") + 1, val.IndexOf(")") - val.IndexOf("(") - 1);
+
+                var funcArgs = ParseArguments(argsString);
+
+                return new Co_Object(new FunctionCall { FunctionName = funcName, Arguments = funcArgs });
+            }
             else
             {
                 var obj = new Co_Object(val);

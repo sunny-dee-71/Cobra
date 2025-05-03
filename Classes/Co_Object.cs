@@ -1,6 +1,6 @@
 ﻿namespace cobra.Classes
 {
-    public class Co_Object
+    public struct Co_Object
     {
         public ObjectType Type { get; set; }
         public object Value { get; set; }
@@ -27,6 +27,11 @@
                 Type = ObjectType.Float;
                 Value = Convert.ToSingle(obj);
             }
+            else if(obj is FunctionCall)
+            {
+                Type = ObjectType.Function;
+                Value = obj;
+            }
             else
             {
                 Type = ObjectType.Other;
@@ -41,6 +46,7 @@
             Float,
             Boolean,
             Variable,
+            Function,
             Other
         }
 
