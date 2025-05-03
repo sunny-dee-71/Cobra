@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace cobra.Classes
@@ -115,6 +116,50 @@ namespace cobra.Classes
                 obj.Type = Co_Object.ObjectType.Variable;
                 return obj;
             }
+        }
+
+        private List<string> Tokenize(string input)
+        {
+            var tokens = new List<string>();
+            var sb = new StringBuilder();
+            bool inQuotes = false;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+
+                if (c == '"')
+                {
+                    sb.Append(c);
+                    inQuotes = !inQuotes;
+                }
+                else if (!inQuotes && (c == '+' || c == '-' || c == '*' || c == '/'))
+                {
+                    if (sb.Length > 0)
+                    {
+                        tokens.Add(sb.ToString().Trim());
+                        sb.Clear();
+                    }
+                    tokens.Add(c.ToString());
+                }
+                else if (!inQuotes && char.IsWhiteSpace(c))
+                {
+                    if (sb.Length > 0)
+                    {
+                        tokens.Add(sb.ToString().Trim());
+                        sb.Clear();
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            if (sb.Length > 0)
+                tokens.Add(sb.ToString().Trim());
+
+            return tokens;
         }
 
 

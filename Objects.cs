@@ -13,7 +13,7 @@ namespace cobra
             Functions.Add(new Function("print", new List<string> { "message" }, async args =>
             {
                 Console.WriteLine(args[0].Value);
-                return new Co_Object(args[0].Value.ToString());
+                return new Co_Object(args[0].Value);
             }));
 
 

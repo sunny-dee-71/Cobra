@@ -21,10 +21,16 @@ if(shouldPrint)
 
 set(Thing, 0)
 \1\print(Thing)
-repeat(Thing < 100)
+repeat(Thing < 0)
 \2\set(Thing, Thing + 1)
+\2\clear()
 \2\print(Thing)
 
+print(""h "" + ""i "" + "" there"")
+
+
+set(Cool, ""Hello"")
+print(Cool + print(Cool))
 
 
 //And that is it

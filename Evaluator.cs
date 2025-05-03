@@ -1,6 +1,7 @@
 ﻿using cobra.Classes;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace cobra
 {
@@ -159,10 +160,9 @@ namespace cobra
 
                 if (arg.Type == Co_Object.ObjectType.Function)
                 {
-                    var funcCall = (FunctionCall)arg.Value; 
-                    var funcArgs = await ResolveArguments(funcCall.Arguments); 
-                    Co_Object? result = await RunFunction(funcCall.FunctionName, funcArgs); 
-                    arg = result ?? new Co_Object(null);
+                    var funcCall = (FunctionCall)arg.Value;
+                    var funcArgs = await ResolveArguments(funcCall.Arguments);
+                    arg = await RunFunction(funcCall.FunctionName, funcArgs);
                 }
 
                 if (i + 2 < args.Count)
@@ -177,6 +177,12 @@ namespace cobra
                             string varName = right.Value.ToString();
                             if (!variables.TryGetValue(varName, out right))
                                 throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                        }
+                        else if (right.Type == Co_Object.ObjectType.Function)
+                        {
+                            var funcCall = (FunctionCall)right.Value;
+                            var funcArgs = await ResolveArguments(funcCall.Arguments);
+                            right = await RunFunction(funcCall.FunctionName, funcArgs);
                         }
 
                         var result = EvaluateExpression(arg, op.Value.ToString(), right);
