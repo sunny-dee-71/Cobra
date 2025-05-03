@@ -28,7 +28,7 @@ namespace cobra.Classes
                 {
                     var match = LinePattern.Match(line);
                     if (!match.Success)
-                        throw new Exception($"Syntax error in line: {line}");
+                        continue;
 
                     int indent = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 0;
                     string name = match.Groups[2].Value;
@@ -51,40 +51,58 @@ namespace cobra.Classes
         private List<Co_Object> ParseArguments(string input)
         {
             var args = new List<Co_Object>();
-            var matches = Regex.Matches(input, "\".*?\"|[^,\\s]+");
 
+            var binaryMatch = Regex.Match(input, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
+            if (binaryMatch.Success)
+            {
+                var left = ParseSingleArgument(binaryMatch.Groups[1].Value);
+                var op = new Co_Object(binaryMatch.Groups[2].Value); // operator
+                var right = ParseSingleArgument(binaryMatch.Groups[3].Value);
+
+                args.Add(left);
+                args.Add(op);
+                args.Add(right);
+                return args;
+            }
+
+            var matches = Regex.Matches(input, "\".*?\"|[^,\\s]+");
             foreach (Match match in matches)
             {
-                string val = match.Value.Trim();
-
-                if (val.StartsWith("\"") && val.EndsWith("\""))
-                {
-                    val = val.Substring(1, val.Length - 2);
-                    args.Add(new Co_Object(val));
-                }
-                else if (int.TryParse(val, out int intValue))
-                {
-                    args.Add(new Co_Object(intValue));
-                }
-                else if (float.TryParse(val, out float floatValue))
-                {
-                    args.Add(new Co_Object(floatValue));
-                }
-                else if (bool.TryParse(val, out bool boolValue))
-                {
-                    args.Add(new Co_Object(boolValue));
-                }
-                else
-                {
-                    var obj = new Co_Object(val);
-                    obj.Type = Co_Object.ObjectType.Variable;
-                    args.Add(obj);
-                }
-
+                args.Add(ParseSingleArgument(match.Value.Trim()));
             }
 
             return args;
         }
+
+
+
+        private Co_Object ParseSingleArgument(string val)
+        {
+            if (val.StartsWith("\"") && val.EndsWith("\""))
+            {
+                val = val.Substring(1, val.Length - 2);
+                return new Co_Object(val);
+            }
+            else if (int.TryParse(val, out int intValue))
+            {
+                return new Co_Object(intValue);
+            }
+            else if (float.TryParse(val, out float floatValue))
+            {
+                return new Co_Object(floatValue);
+            }
+            else if (bool.TryParse(val, out bool boolValue))
+            {
+                return new Co_Object(boolValue);
+            }
+            else
+            {
+                var obj = new Co_Object(val);
+                obj.Type = Co_Object.ObjectType.Variable;
+                return obj;
+            }
+        }
+
 
     }
 }

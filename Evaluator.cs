@@ -43,10 +43,8 @@ namespace cobra
                 else if (name == "repeat")
                 {
                     var resolvedArgs = ResolveArguments(args);
-                    if (resolvedArgs.Count != 1 || resolvedArgs[0].Type != Co_Object.ObjectType.Int)
-                        throw new Exception("[repeat] expects 1 integer argument");
-
-                    int times = (int)resolvedArgs[0].Value;
+                    if (resolvedArgs.Count != 1)
+                        throw new Exception("[repeat] expects 1 argument");
 
                     int blockStart = i + 1;
                     int blockEnd = blockStart;
@@ -55,11 +53,41 @@ namespace cobra
 
                     var block = lines.GetRange(blockStart, blockEnd - blockStart);
 
-                    for (int r = 0; r < times; r++)
-                        await Evaluate(block);
+                    double maxIterations = 99999999999999999999999d;
+                    int iteration = 0;
+
+                    var arg = resolvedArgs[0];
+
+                    if (arg.Type == Co_Object.ObjectType.Int)
+                    {
+                        int times = (int)arg.Value;
+                        for (; iteration < times && iteration < maxIterations; iteration++)
+                            await Evaluate(block);
+                    }
+                    else if (arg.Type == Co_Object.ObjectType.Boolean)
+                    {
+                        while ((bool)arg.Value && iteration < maxIterations)
+                        {
+                            await Evaluate(block);
+
+                            resolvedArgs = ResolveArguments(args);
+                            arg = resolvedArgs[0];
+
+                            if (arg.Type != Co_Object.ObjectType.Boolean)
+                                throw new Exception("[repeat while] condition must remain a boolean");
+
+                            iteration++;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("[repeat] argument must be either an integer or boolean");
+                    }
+
 
                     i = blockEnd;
                 }
+
                 else
                 {
                     await RunFunction(name, args);
@@ -112,27 +140,144 @@ namespace cobra
         private List<Co_Object> ResolveArguments(List<Co_Object> args)
         {
             var resolved = new List<Co_Object>();
-            foreach (var arg in args)
+
+            int i = 0;
+            while (i < args.Count)
             {
+                var arg = args[i];
+
                 if (arg.Type == Co_Object.ObjectType.Variable)
                 {
                     string varName = arg.Value.ToString();
-                    if (variables.TryGetValue(varName, out var resolvedValue))
-                    {
-                        resolved.Add(resolvedValue);
-                    }
-                    else
-                    {
+                    if (!variables.TryGetValue(varName, out arg))
                         throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                }
+
+                if (i + 2 < args.Count)
+                {
+                    var op = args[i + 1];
+                    var right = args[i + 2];
+
+                    if (op.Type == Co_Object.ObjectType.String && IsOperator(op.Value.ToString()))
+                    {
+                        if (right.Type == Co_Object.ObjectType.Variable)
+                        {
+                            string varName = right.Value.ToString();
+                            if (!variables.TryGetValue(varName, out right))
+                                throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                        }
+
+                        var result = EvaluateExpression(arg, op.Value.ToString(), right);
+                        resolved.Add(result);
+                        i += 3;
+                        continue;
                     }
                 }
-                else
-                {
-                    resolved.Add(arg);
-                }
+
+                resolved.Add(arg);
+                i++;
             }
+
             return resolved;
         }
+
+
+        private bool IsOperator(string value)
+        {
+            return value is "+" or "-" or "&&" or "==" or "!=" or ">" or "<" or ">=" or "<=";
+        }
+
+        private Co_Object EvaluateExpression(Co_Object left, string op, Co_Object right)
+{
+    switch (op)
+    {
+        case "+":
+            if (left.Type == Co_Object.ObjectType.String || right.Type == Co_Object.ObjectType.String)
+                return new Co_Object(left.Value.ToString() + right.Value.ToString());
+
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value + (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value + (float)right.Value);
+
+            throw new Exception($"Unsupported types for +: {left.Type} + {right.Type}");
+
+        case "-":
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value - (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value - (float)right.Value);
+
+            throw new Exception($"Unsupported types for -: {left.Type} - {right.Type}");
+
+        case "&&":
+            if (left.Type == Co_Object.ObjectType.Boolean && right.Type == Co_Object.ObjectType.Boolean)
+                return new Co_Object((bool)left.Value && (bool)right.Value);
+
+            throw new Exception("&& only supports boolean values");
+
+        case "==":
+            // Handle equality comparisons
+            return new Co_Object(Equals(left.Value, right.Value));
+
+        case "!=":
+            // Handle inequality comparisons
+            return new Co_Object(!Equals(left.Value, right.Value));
+
+        case ">":
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value > (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value > (float)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.String && right.Type == Co_Object.ObjectType.String)
+                return new Co_Object(string.Compare((string)left.Value, (string)right.Value) > 0);
+
+            throw new Exception("> only supports int, float, or string");
+
+        case "<":
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value < (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value < (float)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.String && right.Type == Co_Object.ObjectType.String)
+                return new Co_Object(string.Compare((string)left.Value, (string)right.Value) < 0);
+
+            throw new Exception("< only supports int, float, or string");
+
+        case ">=":
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value >= (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value >= (float)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.String && right.Type == Co_Object.ObjectType.String)
+                return new Co_Object(string.Compare((string)left.Value, (string)right.Value) >= 0);
+
+            throw new Exception(">= only supports int, float, or string");
+
+        case "<=":
+            if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                return new Co_Object((int)left.Value <= (int)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                return new Co_Object((float)left.Value <= (float)right.Value);
+
+            if (left.Type == Co_Object.ObjectType.String && right.Type == Co_Object.ObjectType.String)
+                return new Co_Object(string.Compare((string)left.Value, (string)right.Value) <= 0);
+
+            throw new Exception("<= only supports int, float, or string");
+
+        default:
+            throw new Exception($"Unknown operator '{op}'");
+    }
+}
 
 
 

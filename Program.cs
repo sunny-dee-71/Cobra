@@ -16,10 +16,15 @@ set(shouldPrint, true)
 if(shouldPrint)
 \1\print(""This should print because the condition is true!"")
 
-repeat(3)
-\1\print(""Loop running"")
-\2\repeat(3)
+\2\repeat(false)
 \3\print(""thing"")
+
+set(Thing, 0)
+\1\print(Thing)
+\1\set(Thing, Thing + 1)
+\1\print(Thing)
+
+
 
 //And that is it
 

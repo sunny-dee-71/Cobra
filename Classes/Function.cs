@@ -22,7 +22,8 @@ namespace cobra.Classes
 
             if (arguments.Count != ParameterNames.Count)
             {
-                Console.WriteLine($"[ERROR] Function '{Name}' expected {ParameterNames.Count} argument(s), but got {arguments.Count}.");
+                Console.WriteLine($"[ERROR] Function '{Name}' expected {ParameterNames.Count} argument(s), but got {arguments.Count}.  Received Args: {string.Join(", ", arguments)}");
+
                 return;
             }
 
