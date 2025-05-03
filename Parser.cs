@@ -52,23 +52,28 @@ namespace cobra.Classes
         {
             var args = new List<Co_Object>();
 
-            var binaryMatch = Regex.Match(input, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
-            if (binaryMatch.Success)
-            {
-                var left = ParseSingleArgument(binaryMatch.Groups[1].Value);
-                var op = new Co_Object(binaryMatch.Groups[2].Value); // operator
-                var right = ParseSingleArgument(binaryMatch.Groups[3].Value);
 
-                args.Add(left);
-                args.Add(op);
-                args.Add(right);
-                return args;
-            }
+            var matches = Regex.Matches(input, "\".*?\"|[^,]+");
 
-            var matches = Regex.Matches(input, "\".*?\"|[^,\\s]+");
             foreach (Match match in matches)
             {
-                args.Add(ParseSingleArgument(match.Value.Trim()));
+                string argText = match.Value.Trim();
+
+                var binMatch = Regex.Match(argText, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
+                if (binMatch.Success)
+                {
+                    var left = ParseSingleArgument(binMatch.Groups[1].Value.Trim());
+                    var op = new Co_Object(binMatch.Groups[2].Value.Trim());
+                    var right = ParseSingleArgument(binMatch.Groups[3].Value.Trim());
+
+                    args.Add(left);
+                    args.Add(op);
+                    args.Add(right);
+                }
+                else
+                {
+                    args.Add(ParseSingleArgument(argText));
+                }
             }
 
             return args;

@@ -21,10 +21,11 @@ if(shouldPrint)
 
 set(Thing, 0)
 \1\print(Thing)
-\1\set(Thing, Thing + 1)
-\1\print(Thing)
+repeat(Thing < 100000)
+\2\set(Thing, Thing + 1)
+\2\print(Thing)
 
-
+slowPrint(""This is a slow print!"", 0.1)
 
 //And that is it
 

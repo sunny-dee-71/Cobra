@@ -119,8 +119,10 @@ namespace cobra
 
                     if (functionName == "set" && args.Count >= 2)
                     {
-                        var resolvedSecond = ResolveArguments(new List<Co_Object> { args[1] });
-                        resolvedArgs = new List<Co_Object> { args[0], resolvedSecond[0] };
+                        var expressionArgs = args.GetRange(1, args.Count - 1);
+                        var resolvedExpression = ResolveArguments(expressionArgs);
+                        resolvedArgs = new List<Co_Object> { args[0], resolvedExpression[0] };
+
                     }
                     else
                     {
