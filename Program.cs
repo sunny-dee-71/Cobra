@@ -12,6 +12,7 @@ class Program
         string code = @"
 # showParsed = false
 # exitImmediately = false
+import(""test"")
 print(""Welcome To Cobra"")
 set(""count"", 0)
 set(Hi, ""Hello"")
@@ -36,6 +37,8 @@ def test(a)
 
 test(1)
 //And that is it
+
+print(eq(1, 1))
 
 def thing(a, b)
 \1\return(a)

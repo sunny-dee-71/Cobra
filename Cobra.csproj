@@ -9,4 +9,12 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="DefaultLibraries\test.co" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="DefaultLibraries\test.co" />
+  </ItemGroup>
+
 </Project>

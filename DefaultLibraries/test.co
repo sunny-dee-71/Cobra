@@ -1,0 +1,6 @@
+def eq(a, b)
+\1\if(a == b)
+\2\return(true)
+\1\return(false)
+
+print("Sucesfully Imported Test")

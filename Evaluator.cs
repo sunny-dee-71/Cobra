@@ -8,6 +8,7 @@ namespace cobra
     public class Evaluator
     {
         public static Dictionary<string, Co_Object> variables = new();
+        public static Dictionary<string, Co_Object> constants = new();
         private static Dictionary<string, UserFunction> userFunctions = new();
         public static bool Exiting = false;
         public static string ExitMessage = null;
@@ -140,6 +141,19 @@ namespace cobra
 
                     i = blockEnd;
                 }
+                else if (name == "import")
+                {
+                    if (args.Count != 1 || args[0].Type != Co_Object.ObjectType.String)
+                        throw new Exception("[import] requires a single string argument (resource name)");
+
+                    string script = Importer.LoadLibrary(args[0].Value.ToString());
+
+                    var parser = new Parser();
+                    var parsedLines = parser.Parse(script);
+
+                    await Evaluate(parsedLines);
+                    i++;
+                }
 
                 else
                 {
@@ -207,7 +221,8 @@ namespace cobra
                 {
                     string varName = arg.Value.ToString();
                     if (!variables.TryGetValue(varName, out arg))
-                        throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                        if (!constants.TryGetValue(varName, out arg))
+                            throw new Exception($"[Resolve] Variable '{varName}' not found.");
                 }
 
                 if (arg.Type == Co_Object.ObjectType.Function)
