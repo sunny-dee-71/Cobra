@@ -3,10 +3,15 @@ using cobra.Classes;
 
 class Program
 {
+    public static Dictionary<string, Co_Object> devVariables = new();
     [STAThread]
     static async Task Main()
     {
+        devVariables.Add("exitImmediately", new Co_Object(true));
+        devVariables.Add("showParsed", new Co_Object(false));
         string code = @"
+# showParsed = false
+# exitImmediately = false
 print(""Welcome To Cobra"")
 set(""count"", 0)
 set(Hi, ""Hello"")
@@ -27,7 +32,6 @@ repeat(Thing < 0)
 \2\print(Thing)
 
 
-
 //And that is it
 
 ";
@@ -39,9 +43,28 @@ repeat(Thing < 0)
         await Task.Delay(100);
         await evaluator.Evaluate(parsedLines);
 
-        foreach (var line in parsedLines)
+        if (devVariables.ContainsKey("showParsed") && devVariables["showParsed"].Type == Co_Object.ObjectType.Boolean && (bool)devVariables["showParsed"].Value)
         {
-            Console.WriteLine(line);
+            foreach (var line in parsedLines)
+            {
+                Console.WriteLine(line);
+            }
+        }
+
+        if (!Evaluator.Exiting)
+        {
+            var Exiter = parser.Parse(@"exit(0, "" Exited successfully. "")");
+            await evaluator.Evaluate(Exiter);
+        }
+
+        if (devVariables.ContainsKey("exitImmediately") && devVariables["exitImmediately"].Type == Co_Object.ObjectType.Boolean && !(bool)devVariables["exitImmediately"].Value)
+        {
+            Console.WriteLine("Exited.");
+            Console.WriteLine($" ├─ Code   : {Evaluator.ExitCode}");
+            Console.WriteLine($" └─ Message: {Evaluator.ExitMessage ?? "None"}");
+            Console.WriteLine(" \nPress any key to exit...");
+            Console.ReadKey();
+            Environment.Exit(Evaluator.ExitCode);
         }
     }
 }

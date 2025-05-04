@@ -16,6 +16,7 @@ namespace cobra.Classes
 
             foreach (var rawLine in lines)
             {
+
                 var line = rawLine.Trim();
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
                     continue;
@@ -26,6 +27,25 @@ namespace cobra.Classes
                     line = line.Substring(0, commentIndex).Trim();
                 }
 
+                if (line.StartsWith("#"))
+                {
+                    var match = Regex.Match(line, @"^#\s*(\w+)\s*=\s*(\w+)$");
+                    if (match.Success)
+                    {
+                        string variableName = match.Groups[1].Value;
+                        Co_Object variableValue = ParseSingleArgument(match.Groups[2].Value);
+
+                        try
+                        {
+                            Program.devVariables[variableName] = variableValue;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[ERROR] Error in dev var setting : {ex.Message}");
+                        }
+                    }
+                        continue;
+                }
 
 
                 {

@@ -25,9 +25,30 @@ namespace cobra
 
             Functions.Add(new Function("exit", new List<string> { }, async args =>
             {
-                Environment.Exit(0);
+                int thing = 0;
+
+                if (args.Count > 0 && args[0].Value != null)
+                {
+                    if (args[0].Type == Co_Object.ObjectType.Int)
+                    {
+                        thing = (int)args[0].Value;
+                    }
+                }
+
+                Evaluator.Exiting = true;
+                Evaluator.ExitCode = thing;
+
+                if (args.Count > 1 && args[1].Value != null)
+                {
+                    if (args[1].Type == Co_Object.ObjectType.String)
+                    {
+                        Evaluator.ExitMessage = (string)args[1].Value;
+                    }
+                }
+
                 return new Co_Object(null);
             }));
+
 
             Functions.Add(new Function("wait", new List<string> { "seconds" }, async args =>
             {
@@ -40,7 +61,6 @@ namespace cobra
                 else
                 {
                     throw new Exception($"[wait] Expected an integer, got {args[0].Type}");
-                    return new Co_Object(null);
                 }
 
             }));
@@ -93,6 +113,12 @@ namespace cobra
 
             }));
 
+            Functions.Add(new Function("input", new List<string> { "prompt" }, async args =>
+            {
+                Console.Write(args[0].Value);
+                string input = await Task.Run(() => Console.ReadLine());
+                return new Co_Object(input);
+            }));
 
 
         }

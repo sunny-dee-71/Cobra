@@ -21,7 +21,7 @@ namespace cobra.Classes
         {
             if (arguments == null) arguments = new List<Co_Object>();
 
-            if (arguments.Count != ParameterNames.Count)
+            if (arguments.Count < ParameterNames.Count)
             {
                 Console.WriteLine($"[ERROR] Function '{Name}' expected {ParameterNames.Count} argument(s), but got {arguments.Count}.  Received Args: {string.Join(", ", arguments)}");
                 return new Co_Object(null);

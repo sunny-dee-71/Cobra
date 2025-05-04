@@ -9,12 +9,17 @@ namespace cobra
     {
         public static Dictionary<string, Co_Object> variables = new();
         private static Dictionary<string, Function> userFunctions = new();
+        public static bool Exiting = false;
+        public static string ExitMessage = null;
+        public static int ExitCode = 0;
 
         public async Task Evaluate(List<ParsedLine> lines)
         {
             int i = 0;
             while (i < lines.Count)
             {
+                if (Exiting)
+                    return;
                 var line = lines[i];
                 string name = line.FunctionName;
                 var args = line.Arguments;
