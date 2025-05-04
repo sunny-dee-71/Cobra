@@ -8,6 +8,8 @@ namespace cobra.Classes
     public class Parser
     {
         private static readonly Regex LinePattern = new Regex(@"^(?:\\(\d+)\\)?(\w+)\((.*)\)$");
+        private static readonly Regex DefPattern = new Regex(@"^(?:\\(\d+)\\)?def\s+(\w+)\s*\(([^)]*)\)$");
+
         public List<ParsedLine> Parse(string code)
         {
             var lines = code.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
@@ -45,6 +47,36 @@ namespace cobra.Classes
                         }
                     }
                         continue;
+                }
+
+                {
+                    Match match;
+
+                    match = DefPattern.Match(line);
+                    if (match.Success)
+                    {
+                        int indent = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 0;
+                        string functionName = match.Groups[2].Value;
+                        string paramsRaw = match.Groups[3].Value;
+
+                        var paramNames = new List<Co_Object>();
+                        foreach (var param in paramsRaw.Split(','))
+                        {
+                            var p = param.Trim();
+                            if (!string.IsNullOrEmpty(p))
+                                paramNames.Add(new Co_Object(p));
+                        }
+
+                        result.Add(new ParsedLine
+                        {
+                            IndentLevel = indent,
+                            FunctionName = "def",
+                            Arguments = new List<Co_Object> { new Co_Object(functionName) }.Concat(paramNames).ToList()
+                        });
+
+                        continue;
+                    }
+
                 }
 
 

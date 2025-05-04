@@ -31,8 +31,17 @@ repeat(Thing < 0)
 \2\clear()
 \2\print(Thing)
 
+def test(a)
+\1\print(""This is a test function!"")
 
+test(1)
 //And that is it
+
+def thing(a, b)
+\1\return(a)
+
+print(thing(1, 2))
+
 
 ";
 
@@ -41,7 +50,14 @@ repeat(Thing < 0)
 
         Evaluator evaluator = new Evaluator();
         await Task.Delay(100);
-        await evaluator.Evaluate(parsedLines);
+        try
+        {
+            await evaluator.Evaluate(parsedLines);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Error in evaluation: {ex.Message}");
+        }
 
         if (devVariables.ContainsKey("showParsed") && devVariables["showParsed"].Type == Co_Object.ObjectType.Boolean && (bool)devVariables["showParsed"].Value)
         {

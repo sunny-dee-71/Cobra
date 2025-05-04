@@ -120,6 +120,14 @@ namespace cobra
                 return new Co_Object(input);
             }));
 
+            Functions.Add(new Function("getKey", new List<string> { "prompt" }, async args =>
+            {
+                Console.Write(args[0].Value);
+                string input = await Task.Run(() => Console.ReadKey().ToString());
+                Console.WriteLine();
+                return new Co_Object(input);
+            }));
+
 
         }
 

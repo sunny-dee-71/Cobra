@@ -8,7 +8,7 @@ namespace cobra
     public class Evaluator
     {
         public static Dictionary<string, Co_Object> variables = new();
-        private static Dictionary<string, Function> userFunctions = new();
+        private static Dictionary<string, UserFunction> userFunctions = new();
         public static bool Exiting = false;
         public static string ExitMessage = null;
         public static int ExitCode = 0;
@@ -45,6 +45,47 @@ namespace cobra
                     }
 
                     i = blockEnd;
+                }
+                else if (name == "def")
+                {
+                    if (args.Count < 1)
+                        throw new Exception("[def] must have a function name");
+
+                    string functionName = args[0].Value.ToString();
+                    List<string> parameters = new List<string>();
+
+                    for (int j = 1; j < args.Count; j++)
+                    {
+                        if (args[j].Type != Co_Object.ObjectType.String)
+                            throw new Exception("Function parameters must be identifiers (strings)");
+
+                        parameters.Add(args[j].Value.ToString());
+                    }
+
+                    int blockStart = i + 1;
+                    int blockEnd = blockStart;
+
+                    while (blockEnd < lines.Count && lines[blockEnd].IndentLevel > indent)
+                        blockEnd++;
+
+                    var body = lines.GetRange(blockStart, blockEnd - blockStart);
+
+                    if (parameters == null || parameters.Count == 0)
+                    {
+                        throw new Exception($"Function {functionName} requires parameters.");
+                    }
+
+                    userFunctions[functionName] = new UserFunction(functionName, parameters, body);
+
+                    i = blockEnd;
+                }
+                else if (name == "return")
+                {
+                    if (args.Count == 0)
+                        throw new Exception("[return] requires a value");
+
+                    var returnValue = await ResolveArguments(args);
+                    throw new ReturnException(returnValue[0]);
                 }
                 else if (name == "repeat")
                 {
