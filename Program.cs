@@ -28,10 +28,6 @@ repeat(Thing < 0)
 
 
 
-print("" THing "" + print("" HEllo ""))
-print("" t "" + "" t "")
-
-
 //And that is it
 
 ";

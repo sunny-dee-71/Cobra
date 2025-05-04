@@ -26,7 +26,6 @@ namespace cobra.Classes
                     line = line.Substring(0, commentIndex).Trim();
                 }
 
-                line = new string(line.Where(c => !char.IsWhiteSpace(c)).ToArray());
 
 
                 {
@@ -55,85 +54,55 @@ namespace cobra.Classes
         public List<Co_Object> ParseArguments(string input)
         {
             var args = new List<Co_Object>();
-            var matches = Regex.Matches(input, "\".*?\"|[^,()]+|[(),]");
-
             var parenDepth = 0;
             var currentArg = new StringBuilder();
 
-            foreach (Match match in matches)
+            for (int i = 0; i < input.Length; i++)
             {
-                string matchValue = match.Value.Trim();
+                char c = input[i];
 
-                // Handle opening parentheses (start of function calls or nested expressions)
-                if (matchValue == "(")
+                if (c == '(') parenDepth++;
+                if (c == ')') parenDepth--;
+
+                if (c == ',' && parenDepth == 0)
                 {
-                    parenDepth++;
-                    currentArg.Append(matchValue);
+                    AddParsedArgument(currentArg.ToString(), args);
+                    currentArg.Clear();
                 }
-                // Handle closing parentheses (end of function calls or nested expressions)
-                else if (matchValue == ")")
-                {
-                    parenDepth--;
-                    currentArg.Append(matchValue);
-                    if (parenDepth == 0) // End of a function call or nested expression
-                    {
-                        args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
-                        currentArg.Clear();
-                    }
-                }
-                // Handle commas outside function calls
-                else if (matchValue == ",")
-                {
-                    if (parenDepth == 0) // Split arguments at commas outside function calls
-                    {
-                        if (currentArg.Length > 0)
-                        {
-                            args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
-                            currentArg.Clear();
-                        }
-                    }
-                    else
-                    {
-                        currentArg.Append(matchValue);
-                    }
-                }
-                // Otherwise, just append the value (operator, string, etc.)
                 else
                 {
-                    currentArg.Append(matchValue);
+                    currentArg.Append(c);
                 }
             }
 
-            // Add the last argument if any
             if (currentArg.Length > 0)
             {
-                // Check for binary operation and split the operator separately
-                var binMatch = Regex.Match(currentArg.ToString(), @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
-
-                if (binMatch.Success)
-                {
-                    var left = ParseSingleArgument(binMatch.Groups[1].Value.Trim());
-                    var op = new Co_Object(binMatch.Groups[2].Value.Trim()); // Operator as its own argument
-                    var right = ParseSingleArgument(binMatch.Groups[3].Value.Trim());
-
-                    // Add the parsed arguments and the operator as a separate item
-                    args.Add(left);
-                    args.Add(op);
-                    args.Add(right);
-                }
-                else
-                {
-                    // If there is no binary operation, add it as a single argument
-                    args.Add(ParseSingleArgument(currentArg.ToString().Trim()));
-                }
+                AddParsedArgument(currentArg.ToString(), args);
             }
 
             return args;
         }
 
+        private void AddParsedArgument(string raw, List<Co_Object> args)
+        {
+            raw = raw.Trim();
 
+            var binMatch = Regex.Match(raw, @"^(.+?)\s*(==|!=|>=|<=|>|<|\+|\-|\*|\/|%)\s*(.+)$");
+            if (binMatch.Success)
+            {
+                var left = ParseSingleArgument(binMatch.Groups[1].Value.Trim());
+                var op = new Co_Object(binMatch.Groups[2].Value.Trim());
+                var right = ParseSingleArgument(binMatch.Groups[3].Value.Trim());
 
-
+                args.Add(left);
+                args.Add(op);
+                args.Add(right);
+            }
+            else
+            {
+                args.Add(ParseSingleArgument(raw));
+            }
+        }
 
 
         private Co_Object ParseSingleArgument(string val)
@@ -155,15 +124,36 @@ namespace cobra.Classes
             {
                 return new Co_Object(boolValue);
             }
-            else if (val.Contains("(") && val.Contains(")"))
+            else if (val.Contains("(") && val.EndsWith(")"))
             {
-                var funcName = val.Substring(0, val.IndexOf("("));
-                var argsString = val.Substring(val.IndexOf("(") + 1, val.IndexOf(")") - val.IndexOf("(") - 1);
+                int openParenIndex = val.IndexOf('(');
+                string funcName = val.Substring(0, openParenIndex).Trim();
 
+                int parenDepth = 1;
+                int i = openParenIndex + 1;
+                StringBuilder argsBuilder = new StringBuilder();
+
+                while (i < val.Length && parenDepth > 0)
+                {
+                    char c = val[i];
+
+                    if (c == '(') parenDepth++;
+                    else if (c == ')') parenDepth--;
+
+                    if (parenDepth > 0) argsBuilder.Append(c);
+                    i++;
+                }
+
+                var argsString = argsBuilder.ToString();
                 var funcArgs = ParseArguments(argsString);
 
-                return new Co_Object(new FunctionCall { FunctionName = funcName, Arguments = funcArgs });
+                return new Co_Object(new FunctionCall
+                {
+                    FunctionName = funcName,
+                    Arguments = funcArgs
+                });
             }
+
             else
             {
                 var obj = new Co_Object(val);
