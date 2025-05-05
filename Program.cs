@@ -46,9 +46,6 @@ def thing(a, b)
 print(thing(1, 2))
 
 print(funcTime(100000))
-print(funcTime(10000))
-print(funcTime(10000000))
-print(funcTime(1000000))
 
 
 ";
