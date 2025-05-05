@@ -128,7 +128,10 @@ namespace cobra
                 return new Co_Object(input);
             }));
 
-
+            Functions.Add(new Function("time", new List<string> { }, async args =>
+            {
+                return new Co_Object(Time.time);
+            }));
         }
 
         public static Function GetFunction(string name)

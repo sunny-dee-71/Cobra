@@ -71,10 +71,6 @@ namespace cobra
 
                     var body = lines.GetRange(blockStart, blockEnd - blockStart);
 
-                    if (parameters == null || parameters.Count == 0)
-                    {
-                        throw new Exception($"Function {functionName} requires parameters.");
-                    }
 
                     userFunctions[functionName] = new UserFunction(functionName, parameters, body);
 
@@ -109,12 +105,12 @@ namespace cobra
                     if (arg.Type == Co_Object.ObjectType.Int)
                     {
                         int times = (int)arg.Value;
-                        for (; iteration < times && iteration < maxIterations; iteration++)
+                        for (; iteration < times; iteration++)
                             await Evaluate(block);
                     }
                     else if (arg.Type == Co_Object.ObjectType.Boolean)
                     {
-                        while ((bool)arg.Value && iteration < maxIterations)
+                        while ((bool)arg.Value)
                         {
                             await Evaluate(block);
 
@@ -130,12 +126,6 @@ namespace cobra
                     else
                     {
                         throw new Exception("[repeat] argument must be either an integer or boolean");
-                    }
-
-                    if (iteration >= maxIterations)
-                    {
-                        Console.WriteLine("[WARNING] Maximum iterations reached in repeat loop.");
-                        i = blockEnd;
                     }
 
 
@@ -272,12 +262,15 @@ namespace cobra
 
         private bool IsOperator(string value)
         {
-            return value is "+" or "-" or "&&" or "==" or "!=" or ">" or "<" or ">=" or "<=";
+            return value is "+" or "-" or "&&" or "==" or "!=" or ">" or "<" or ">=" or "<=" or "/" or "*" or "%" or "||";
         }
 
         private Co_Object EvaluateExpression(Co_Object left, string op, Co_Object right)
         {
-
+            List<Co_Object> args = new List<Co_Object> { left, right };
+            args = Converter.ConvertToLowestNumberType(args);
+            left = args[0];
+            right = args[1];
             switch (op)
             {
                 case "+":
@@ -360,6 +353,32 @@ namespace cobra
                         return new Co_Object(string.Compare((string)left.Value, (string)right.Value) <= 0);
 
                     throw new Exception("<= only supports int, float, or string");
+
+                case "/":
+                    if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                        return new Co_Object((int)left.Value / (int)right.Value);
+                    if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                        return new Co_Object((float)left.Value / (float)right.Value);
+                    throw new Exception("/ only supports int or float");
+
+                case "%":
+                    if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                        return new Co_Object((int)left.Value % (int)right.Value);
+                    if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                        return new Co_Object((float)left.Value % (float)right.Value);
+                    throw new Exception("% only supports int or float");
+
+                case "*":
+                    if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)
+                        return new Co_Object((int)left.Value * (int)right.Value);
+                    if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
+                        return new Co_Object((float)left.Value * (float)right.Value);
+                    throw new Exception("* only supports int or float");
+
+                case "||":
+                    if (left.Type == Co_Object.ObjectType.Boolean && right.Type == Co_Object.ObjectType.Boolean)
+                        return new Co_Object((bool)left.Value || (bool)right.Value);
+                    throw new Exception("|| only supports boolean values");
 
                 default:
                     throw new Exception($"Unknown operator '{op}'");

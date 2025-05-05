@@ -44,6 +44,7 @@
             String,
             Int,
             Float,
+            Double,
             Boolean,
             Variable,
             Function,
