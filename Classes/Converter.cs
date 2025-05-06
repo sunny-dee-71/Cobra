@@ -8,6 +8,30 @@ namespace cobra.Classes
 {
     class Converter
     {
+
+        public static Co_Object ConvertVarToString(Co_Object var)
+        {
+            if (var.Type == Co_Object.ObjectType.String)
+            {
+                return var;
+            }
+            else if (var.Type == Co_Object.ObjectType.Int)
+            {
+                return new Co_Object(var.Value.ToString());
+            }
+            else if (var.Type == Co_Object.ObjectType.Float)
+            {
+                return new Co_Object(var.Value.ToString());
+            }
+            else if (var.Type == Co_Object.ObjectType.Variable)
+            {
+                return new Co_Object(var.Value.ToString());
+            }
+            else
+            {
+                return new Co_Object(null);
+            }
+        }
         public static List<Co_Object> ConvertToLowestNumberType(List<Co_Object> thing)
         {
             var result = new List<Co_Object>();

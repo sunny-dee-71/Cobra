@@ -12,5 +12,8 @@ def funcTime(a)
 \1\set(duration, end - start)
 \1\return(a / duration)
 
+thing = "test"
+print(thing)
+
 
 print("Sucesfully Imported Test")

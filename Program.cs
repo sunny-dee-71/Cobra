@@ -12,7 +12,7 @@ class Program
         string code = @"
 # showParsed = false
 # exitImmediately = false
-import(""test"")
+import(test)
 print(""Welcome To Cobra"")
 set(""count"", 0)
 set(Hi, ""Hello"")
@@ -43,9 +43,8 @@ print(eq(1, 1))
 def thing(a, b)
 \1\return(a)
 
-print(thing(1, 2))
 
-print(funcTime(100000))
+print(test.funcTime(10))
 
 
 ";

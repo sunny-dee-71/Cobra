@@ -7,7 +7,7 @@ namespace cobra.Classes
 {
     public class Parser
     {
-        private static readonly Regex LinePattern = new Regex(@"^(?:\\(\d+)\\)?(\w+)\((.*)\)$");
+        private static readonly Regex LinePattern = new Regex(@"^(?:\\(\d+)\\)?([\w\.]+)\((.*)\)$");
         private static readonly Regex DefPattern = new Regex(@"^(?:\\(\d+)\\)?def\s+(\w+)\s*\(([^)]*)\)$");
         private static readonly Regex AssignPattern = new Regex(@"^(?:\\(\d+)\\)?(\w+)\s*=\s*(.+)$");
 
@@ -58,17 +58,13 @@ namespace cobra.Classes
                     string varName = assignMatch.Groups[2].Value;
                     string valueRaw = assignMatch.Groups[3].Value;
 
-                    var valueArg = ParseSingleArgument(valueRaw);
+                    List<Co_Object> valueArg = ParseArguments(valueRaw);
 
                     result.Add(new ParsedLine
                     {
                         IndentLevel = indent,
                         FunctionName = "set",
-                        Arguments = new List<Co_Object>
-                        {
-                            new Co_Object(varName),
-                            valueArg
-                        }
+                        Arguments = new List<Co_Object>(valueArg) { new Co_Object(varName) },
                     });
 
                     continue;

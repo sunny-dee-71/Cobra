@@ -7,20 +7,21 @@ namespace cobra
 {
     public class Evaluator
     {
-        public static Dictionary<string, Co_Object> variables = new();
+        public Dictionary<string, Co_Object> variables = new();
         public static Dictionary<string, Co_Object> constants = new();
-        private static Dictionary<string, UserFunction> userFunctions = new();
+        private Dictionary<string, UserFunction> userFunctions = new();
+        public Dictionary<string, Calss> loadedLibarys = new();
         public static bool Exiting = false;
         public static string ExitMessage = null;
         public static int ExitCode = 0;
 
-        public async Task Evaluate(List<ParsedLine> lines)
+        public async Task<Calss> Evaluate(List<ParsedLine> lines )
         {
             int i = 0;
             while (i < lines.Count)
             {
                 if (Exiting)
-                    return;
+                    return new Calss { variables = variables, userFunctions = userFunctions };
                 var line = lines[i];
                 string name = line.FunctionName;
                 var args = line.Arguments;
@@ -118,14 +119,14 @@ namespace cobra
                             arg = resolvedArgs[0];
 
                             if (arg.Type != Co_Object.ObjectType.Boolean)
-                                throw new Exception("[repeat while] condition must remain a boolean");
+                                throw new Exception("[repeat while] condition must remain a boolean : you gave: " + arg.Type);
 
                             iteration++;
                         }
                     }
                     else
                     {
-                        throw new Exception("[repeat] argument must be either an integer or boolean");
+                        throw new Exception("[repeat] argument must be either an integer or boolean : you gave: " + arg.Type);
                     }
 
 
@@ -133,15 +134,18 @@ namespace cobra
                 }
                 else if (name == "import")
                 {
-                    if (args.Count != 1 || args[0].Type != Co_Object.ObjectType.String)
+                    var thing1 = Converter.ConvertVarToString(args[0]);
+                    if (args.Count != 1 || thing1.Type != Co_Object.ObjectType.String )
                         throw new Exception("[import] requires a single string argument (resource name)");
 
-                    string script = Importer.LoadLibrary(args[0].Value.ToString());
+                    string script = Importer.LoadLibrary(thing1.Value.ToString());
 
                     var parser = new Parser();
                     var parsedLines = parser.Parse(script);
 
-                    await Evaluate(parsedLines);
+                    var thing = await Evaluate(parsedLines);
+
+                    loadedLibarys[thing1.Value.ToString()] = thing;
                     i++;
                 }
 
@@ -151,15 +155,28 @@ namespace cobra
                     i++;
                 }
             }
+            return new Calss { variables = variables, userFunctions = userFunctions };
         }
 
         public async Task<Co_Object> RunFunction(string functionName, List<Co_Object> args)
         {
-            if (userFunctions.ContainsKey(functionName))
+            Calss calss = new Calss { variables = variables, userFunctions = userFunctions };
+
+            if (functionName.Contains("."))
+            {
+                string[] parts = functionName.Split('.');
+                string className = parts[0];
+                functionName = parts[1];
+                calss = null;
+                loadedLibarys.TryGetValue(className, out calss);
+            }
+
+
+            if (calss.userFunctions.ContainsKey(functionName))
             {
                 var func = userFunctions[functionName];
                 var resolvedArgs = await ResolveArguments(args);
-                return await func.Invoke(resolvedArgs);
+                return await func.Invoke(resolvedArgs, calss);
             }
             else
             {
@@ -178,7 +195,8 @@ namespace cobra
                     {
                         var expressionArgs = args.GetRange(1, args.Count - 1);
                         var resolvedExpression = await ResolveArguments(expressionArgs);
-                        resolvedArgs = new List<Co_Object> { args[0], resolvedExpression[0] };
+                        var thiss = new Co_Object(this);
+                        resolvedArgs = new List<Co_Object> { args[0], resolvedExpression[0], thiss };
 
                     }
                     else
@@ -197,8 +215,31 @@ namespace cobra
             return new Co_Object(null);
         }
 
+        public async Task<Co_Object> getVar(string name)
+        {
+            Console.WriteLine($"[getVar] {name}");
+            Calss calss = new Calss { variables = variables, userFunctions = userFunctions };
+            string className = "this";
+            if (name.Contains("."))
+            {
+                string[] parts = name.Split('.');
+                className = parts[0];
+                name = parts[1];
+                calss = null;
+                loadedLibarys.TryGetValue(className, out calss);
+            }
 
-        private async Task<List<Co_Object>> ResolveArguments(List<Co_Object> args)
+            if (calss == null)
+                throw new Exception($"[getVar] Class '{className}' not found.");
+
+            if (calss.variables.TryGetValue(name, out var value))
+            {
+                return value;
+            }
+            return new Co_Object(null);
+        }
+
+        public async Task<List<Co_Object>> ResolveArguments(List<Co_Object> args)
         {
             var resolved = new List<Co_Object>();
             int i = 0;
@@ -210,9 +251,14 @@ namespace cobra
                 if (arg.Type == Co_Object.ObjectType.Variable)
                 {
                     string varName = arg.Value.ToString();
-                    if (!variables.TryGetValue(varName, out arg))
-                        if (!constants.TryGetValue(varName, out arg))
-                            throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                    try
+                    {
+                        arg = await getVar(varName);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"[Resolve] Variable '{varName}' not found. " + ex.Message, ex);
+                    }
                 }
 
                 if (arg.Type == Co_Object.ObjectType.Function)
@@ -232,8 +278,14 @@ namespace cobra
                         if (right.Type == Co_Object.ObjectType.Variable)
                         {
                             string varName = right.Value.ToString();
-                            if (!variables.TryGetValue(varName, out right))
-                                throw new Exception($"[Resolve] Variable '{varName}' not found.");
+                            try
+                            {
+                                right = await getVar(varName);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception($"[Resolve] Variable '{varName}' not found. " + ex.Message, ex);
+                            }
                         }
                         else if (right.Type == Co_Object.ObjectType.Function)
                         {
@@ -265,7 +317,7 @@ namespace cobra
             return value is "+" or "-" or "&&" or "==" or "!=" or ">" or "<" or ">=" or "<=" or "/" or "*" or "%" or "||";
         }
 
-        private Co_Object EvaluateExpression(Co_Object left, string op, Co_Object right)
+        public static Co_Object EvaluateExpression(Co_Object left, string op, Co_Object right)
         {
             List<Co_Object> args = new List<Co_Object> { left, right };
             args = Converter.ConvertToLowestNumberType(args);
@@ -359,7 +411,7 @@ namespace cobra
                         return new Co_Object((int)left.Value / (int)right.Value);
                     if (left.Type == Co_Object.ObjectType.Float && right.Type == Co_Object.ObjectType.Float)
                         return new Co_Object((float)left.Value / (float)right.Value);
-                    throw new Exception("/ only supports int or float");
+                    throw new Exception("/ only supports int or float : recived " + left + " " + right);
 
                 case "%":
                     if (left.Type == Co_Object.ObjectType.Int && right.Type == Co_Object.ObjectType.Int)

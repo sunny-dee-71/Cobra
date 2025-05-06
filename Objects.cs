@@ -93,14 +93,15 @@ namespace cobra
             }));
 
 
-            Functions.Add(new Function("set", new List<string> { "name", "value" }, async args =>
+            Functions.Add(new Function("set", new List<string> { "name", "value", "instance" }, async args =>
             {
                 string varName = args[0].Value.ToString();
                 var value = args[1];
+                Evaluator instance = args[2].Value as Evaluator;
 
                 if (value.Type == Co_Object.ObjectType.Variable)
                 {
-                    if (Evaluator.variables.TryGetValue(value.Value.ToString(), out var resolved))
+                    if (instance.variables.TryGetValue(value.Value.ToString(), out var resolved))
                     {
                         value = resolved;
                     }
@@ -110,7 +111,7 @@ namespace cobra
                     }
                 }
 
-                Evaluator.variables[varName] = value;
+                instance.variables[varName] = value;
 
                 return new Co_Object(varName);
 
