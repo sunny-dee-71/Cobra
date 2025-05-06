@@ -20,7 +20,7 @@ namespace cobra.Classes
         }
 
 
-        public async Task<Co_Object> Invoke(List<Co_Object> args, Calss __instance)
+        public async Task<Co_Object> Invoke(List<Co_Object> args, Class __instance)
         {
             if (args.Count != Parameters.Count)
                 throw new Exception($"Function expected {Parameters.Count} arguments, got {args.Count}");

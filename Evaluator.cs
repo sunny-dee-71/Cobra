@@ -10,18 +10,18 @@ namespace cobra
         public Dictionary<string, Co_Object> variables = new();
         public static Dictionary<string, Co_Object> constants = new();
         private Dictionary<string, UserFunction> userFunctions = new();
-        public Dictionary<string, Calss> loadedLibarys = new();
+        public Dictionary<string, Class> loadedLibarys = new();
         public static bool Exiting = false;
         public static string ExitMessage = null;
         public static int ExitCode = 0;
 
-        public async Task<Calss> Evaluate(List<ParsedLine> lines )
+        public async Task<Class> Evaluate(List<ParsedLine> lines )
         {
             int i = 0;
             while (i < lines.Count)
             {
                 if (Exiting)
-                    return new Calss { variables = variables, userFunctions = userFunctions };
+                    return new Class { variables = variables, userFunctions = userFunctions };
                 var line = lines[i];
                 string name = line.FunctionName;
                 var args = line.Arguments;
@@ -155,12 +155,12 @@ namespace cobra
                     i++;
                 }
             }
-            return new Calss { variables = variables, userFunctions = userFunctions };
+            return new Class { variables = variables, userFunctions = userFunctions };
         }
 
         public async Task<Co_Object> RunFunction(string functionName, List<Co_Object> args)
         {
-            Calss calss = new Calss { variables = variables, userFunctions = userFunctions };
+            Class calss = new Class { variables = variables, userFunctions = userFunctions };
 
             if (functionName.Contains("."))
             {
@@ -218,7 +218,7 @@ namespace cobra
         public async Task<Co_Object> getVar(string name)
         {
             Console.WriteLine($"[getVar] {name}");
-            Calss calss = new Calss { variables = variables, userFunctions = userFunctions };
+            Class calss = new Class { variables = variables, userFunctions = userFunctions };
             string className = "this";
             if (name.Contains("."))
             {

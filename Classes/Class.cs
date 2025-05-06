@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace cobra.Classes
 {
-    public class Calss
+    public class Class
     {
         public Dictionary<string, Co_Object> variables = new();
         public Dictionary<string, UserFunction> userFunctions = new();
