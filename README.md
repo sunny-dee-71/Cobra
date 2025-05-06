@@ -33,3 +33,15 @@ Clone the repo and run it with:
 git clone https://github.com/sunny-dee-71/Cobra.git
 cd Cobra
 dotnet run
+
+```
+
+
+# Examples 
+
+``` cobra
+print("hello, world")
+
+repeat(100)
+\1\ print(" this will print 100 times")
+```
