@@ -44,13 +44,13 @@ def thing(a, b)
 \1\return(a)
 
 
-print(test.funcTime(10))
+print(test.funcTime(100000))
 
 
 ";
 
         var parser = new Parser();
-        var parsedLines = parser.Parse(code);
+        var parsedLines = parser.Parse("import(IDE)");
 
         Evaluator evaluator = new Evaluator();
         await Task.Delay(100);

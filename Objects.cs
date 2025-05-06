@@ -7,6 +7,7 @@ namespace cobra
     class Objects
     {
         public static List<Function> Functions = new List<Function>();
+        public static Evaluator Evaluator = new Evaluator();
 
         static Objects()
         {
@@ -135,6 +136,22 @@ namespace cobra
             Functions.Add(new Function("time", new List<string> { }, async args =>
             {
                 return new Co_Object(Time.time);
+            }));
+
+            Functions.Add(new Function("run", new List<string> { "what" }, async args =>
+            {
+                if (args[0].Type == Co_Object.ObjectType.String)
+                {
+                    string code = (string)args[0].Value;
+                    var parser = new Parser();
+                    var parsedLines = parser.Parse(code);
+                    await Evaluator.Evaluate(parsedLines);
+                }
+                else
+                {
+                    throw new Exception("[run] Argument must be a string.");
+                }
+                return new Co_Object(null);
             }));
         }
 

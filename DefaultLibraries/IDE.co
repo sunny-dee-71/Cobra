@@ -1,0 +1,3 @@
+print("welcome to cobra IDE")
+repeat(true)
+\1\run(input("Command: "))
