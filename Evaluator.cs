@@ -217,7 +217,6 @@ namespace cobra
 
         public async Task<Co_Object> getVar(string name)
         {
-            Console.WriteLine($"[getVar] {name}");
             Class calss = new Class { variables = variables, userFunctions = userFunctions };
             string className = "this";
             if (name.Contains("."))
